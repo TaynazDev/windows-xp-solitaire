@@ -299,7 +299,7 @@ function drawFromStock() {
         const card = gameState.stock.pop();
         card.faceUp = true;
         gameState.waste.push(card);
-        score = Math.max(0, score - 2);
+        score = Math.max(0, score - 2); // XP Solitaire: -2 points per card drawn from stock
     }
     render();
 }

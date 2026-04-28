@@ -259,7 +259,7 @@ body {
     opacity: 0.85;
 }
 
-/* Stacked cards in tableau – offset by 22px for face-down, 28px for face-up */
+/* Stacked cards in tableau – offset by 20px for face-down, 28px for face-up */
 .card-in-tableau {
     position: absolute;
 }
