@@ -1,0 +1,282 @@
+/* =========================================================
+   Windows XP Solitaire – Classic Styling
+   ========================================================= */
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #008000; /* Classic Windows XP green felt */
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 16px;
+    user-select: none;
+}
+
+/* ---------- XP Window Frame ---------- */
+#window-frame {
+    width: 780px;
+    border: 2px solid #0a246a;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6), inset 1px 1px 0 #7ba2e0;
+    background-color: #ece9d8; /* Classic XP window background */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Title Bar ---------- */
+#title-bar {
+    background: linear-gradient(to bottom, #0058c8 0%, #3a93f0 40%, #0058c8 100%);
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+#title-bar-text {
+    color: #fff;
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.title-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+}
+
+#title-bar-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.title-btn {
+    width: 21px;
+    height: 21px;
+    font-size: 10px;
+    font-weight: bold;
+    background: linear-gradient(to bottom, #e8f0fc, #c0d4f0);
+    border: 1px solid #0a246a;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    line-height: 1;
+}
+
+.title-btn:hover {
+    background: linear-gradient(to bottom, #f0f6ff, #d0e4ff);
+}
+
+#btn-close {
+    background: linear-gradient(to bottom, #f07070, #d02020);
+    color: #fff;
+}
+
+#btn-close:hover {
+    background: linear-gradient(to bottom, #ff9090, #e03030);
+}
+
+/* ---------- Menu Bar ---------- */
+#menu-bar {
+    background-color: #ece9d8;
+    border-bottom: 1px solid #aca899;
+    padding: 2px 4px;
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.menu-item {
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 2px;
+}
+
+.menu-item:hover {
+    background-color: #316ac5;
+    color: #fff;
+}
+
+/* ---------- Game Area ---------- */
+#game-area {
+    background-color: #008000; /* Green felt inside the window */
+    padding: 12px;
+    flex: 1;
+    min-height: 500px;
+}
+
+/* ---------- Top Row (Stock, Waste, Foundations) ---------- */
+#top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+#top-row .spacer {
+    flex: 1;
+}
+
+/* ---------- Pile Slots (placeholders) ---------- */
+.pile-slot {
+    width: 72px;
+    height: 100px;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pile-slot:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+.pile-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pile-suit {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1;
+}
+
+/* Foundation suit colors */
+.foundation[data-index="0"] .pile-suit,
+.foundation[data-index="1"] .pile-suit {
+    color: rgba(220, 50, 50, 0.4); /* Red suits */
+}
+
+/* ---------- Tableau ---------- */
+#tableau {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.tableau-column {
+    width: 72px;
+    min-height: 100px;
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.1);
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    width: 72px;
+    height: 100px;
+    background-color: #fff;
+    border: 1px solid #999;
+    border-radius: 6px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding: 4px 5px;
+    cursor: pointer;
+    position: absolute;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+    transition: box-shadow 0.1s;
+}
+
+.card:hover {
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.card.face-down {
+    background: repeating-linear-gradient(
+        45deg,
+        #00008b,
+        #00008b 4px,
+        #00009f 4px,
+        #00009f 8px
+    );
+    cursor: default;
+}
+
+.card.face-down:hover {
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.card.red {
+    color: #cc0000;
+}
+
+.card.black {
+    color: #000;
+}
+
+/* Card rank + suit in top-left corner */
+.card-rank {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.card-suit-small {
+    font-size: 12px;
+    line-height: 1;
+}
+
+/* Large center suit */
+.card-suit-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    opacity: 0.85;
+}
+
+/* Stacked cards in tableau – offset by 20px for face-down, 28px for face-up */
+.card-in-tableau {
+    position: absolute;
+}
+
+/* ---------- Stock pile – show card count ---------- */
+#stock-pile .pile-label {
+    pointer-events: none;
+}
+
+/* ---------- Status Bar ---------- */
+#status-bar {
+    background-color: #ece9d8;
+    border-top: 1px solid #aca899;
+    padding: 3px 10px;
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: #444;
+    flex-shrink: 0;
+}
