@@ -9,6 +9,14 @@ const SUITS = ['♥', '♦', '♣', '♠'];
 const SUIT_NAMES = ['hearts', 'diamonds', 'clubs', 'spades'];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
+// Scoring constants (authentic Windows XP Solitaire values)
+const SCORE_CARD_TO_FOUNDATION    =  10;
+const SCORE_WASTE_TO_TABLEAU      =   5;
+const SCORE_FLIP_TABLEAU_CARD     =   5;
+const SCORE_FOUNDATION_TO_TABLEAU = -15;
+const SCORE_DRAW_FROM_STOCK       =  -2;
+const SCORE_RECYCLE_STOCK         = -100;
+
 // ─── State ───────────────────────────────────────────────────────────────────
 
 /**
@@ -146,7 +154,7 @@ function executeMove(source, dest) {
             if (!card || !canPlaceOnFoundation(card, dest.idx)) return false;
             gameState.waste.pop();
             gameState.foundations[dest.idx].push(card);
-            score += 10;
+            score += SCORE_CARD_TO_FOUNDATION;
         } else if (source.type === 'tableau') {
             const col = gameState.tableau[source.col];
             if (source.cardIdx !== col.length - 1) return false; // Only the top card
@@ -154,11 +162,11 @@ function executeMove(source, dest) {
             if (!card || !canPlaceOnFoundation(card, dest.idx)) return false;
             col.pop();
             gameState.foundations[dest.idx].push(card);
-            score += 10;
+            score += SCORE_CARD_TO_FOUNDATION;
             // Flip new top of source column if face-down
             if (col.length > 0 && !col[col.length - 1].faceUp) {
                 col[col.length - 1].faceUp = true;
-                score += 5;
+                score += SCORE_FLIP_TABLEAU_CARD;
             }
         } else {
             return false; // Foundation-to-foundation not allowed
@@ -173,7 +181,7 @@ function executeMove(source, dest) {
             if (!card || !canPlaceOnTableauColumn(card, dest.col)) return false;
             gameState.waste.pop();
             gameState.tableau[dest.col].push(card);
-            score += 5;
+            score += SCORE_WASTE_TO_TABLEAU;
         } else if (source.type === 'tableau') {
             const srcCol = gameState.tableau[source.col];
             const cards = srcCol.slice(source.cardIdx);
@@ -184,7 +192,7 @@ function executeMove(source, dest) {
             // Flip new top of source column if face-down
             if (srcCol.length > 0 && !srcCol[srcCol.length - 1].faceUp) {
                 srcCol[srcCol.length - 1].faceUp = true;
-                score += 5;
+                score += SCORE_FLIP_TABLEAU_CARD;
             }
         } else if (source.type === 'foundation') {
             const pile = gameState.foundations[source.idx];
@@ -192,7 +200,7 @@ function executeMove(source, dest) {
             if (!card || !canPlaceOnTableauColumn(card, dest.col)) return false;
             pile.pop();
             gameState.tableau[dest.col].push(card);
-            score = Math.max(0, score - 15);
+            score += SCORE_FOUNDATION_TO_TABLEAU;
         }
         score = Math.max(0, score);
         return true;
@@ -218,12 +226,12 @@ function handleStockClick() {
             card.faceUp = false;
             gameState.stock.push(card);
         }
-        score = Math.max(0, score - 100);
+        score = Math.max(0, score - SCORE_RECYCLE_STOCK);
     } else {
         const card = gameState.stock.pop();
         card.faceUp = true;
         gameState.waste.push(card);
-        score = Math.max(0, score - 2);
+        score = Math.max(0, score + SCORE_DRAW_FROM_STOCK);
     }
     render();
 }
@@ -433,9 +441,9 @@ function renderFoundations() {
 }
 
 function renderTableau() {
-    const cardH = getCardHeight();
-    const FACE_DOWN_OFFSET = Math.round(cardH * 0.20);
-    const FACE_UP_OFFSET   = Math.round(cardH * 0.28);
+    const cardHeight = getCardHeight();
+    const FACE_DOWN_OFFSET = Math.round(cardHeight * 0.20);
+    const FACE_UP_OFFSET   = Math.round(cardHeight * 0.28);
 
     for (let col = 0; col < 7; col++) {
         const colEl = document.getElementById(`tableau-${col}`);
@@ -444,7 +452,7 @@ function renderTableau() {
         const cards = gameState.tableau[col];
 
         if (cards.length === 0) {
-            colEl.style.minHeight = `${cardH}px`;
+            colEl.style.minHeight = `${cardHeight}px`;
             colEl.style.height = '';
             continue;
         }
@@ -475,7 +483,7 @@ function renderTableau() {
             }
         });
 
-        const totalHeight = offset + cardH;
+        const totalHeight = offset + cardHeight;
         colEl.style.minHeight = `${totalHeight}px`;
         colEl.style.height = `${totalHeight}px`;
     }

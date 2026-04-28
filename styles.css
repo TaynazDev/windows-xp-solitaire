@@ -4,8 +4,9 @@
 
 /* ---------- CSS Variables (card dimensions, responsive) ---------- */
 :root {
-    /* On larger screens, keep natural card size */
-    --card-w: min(72px, calc((100vw - 72px) / 7));
+    --base-card-w: 72px;
+    /* On larger screens, keep natural card size; scale down to fit 7 columns on small screens */
+    --card-w: min(var(--base-card-w), calc((100vw - var(--base-card-w)) / 7));
     --card-h: calc(var(--card-w) * 1.389);  /* 100/72 ≈ 1.389 */
     --pile-gap: clamp(4px, 1.2vw, 10px);
     --game-padding: clamp(6px, 1.5vw, 12px);
