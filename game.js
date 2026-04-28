@@ -313,11 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal = () => { helpOverlay.hidden = false; };
     const closeModal = () => { helpOverlay.hidden = true; };
 
-    document.querySelectorAll('.menu-item').forEach(item => {
-        if (item.textContent.trim() === 'Help') {
-            item.addEventListener('click', openModal);
-        }
-    });
+    document.getElementById('menu-help').addEventListener('click', openModal);
     document.getElementById('help-close-btn').addEventListener('click', closeModal);
     document.getElementById('help-ok-btn').addEventListener('click', closeModal);
     helpOverlay.addEventListener('click', (e) => {

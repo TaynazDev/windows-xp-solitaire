@@ -21,8 +21,8 @@
         </div>
 
         <div id="menu-bar">
-            <span class="menu-item">Game</span>
-            <span class="menu-item">Help</span>
+            <span class="menu-item" id="menu-game">Game</span>
+            <span class="menu-item" id="menu-help">Help</span>
         </div>
 
         <div id="game-area">
@@ -78,10 +78,10 @@
                 <button class="title-btn modal-close-btn" id="help-close-btn">✕</button>
             </div>
             <div class="modal-body">
-                <h2 class="modal-heading">🎯 Objective</h2>
+                <h2 class="modal-heading"><span aria-hidden="true">🎯</span> Objective</h2>
                 <p>Move all 52 cards to the four <strong>Foundation</strong> piles (♥ ♦ ♣ ♠), built from <strong>Ace up to King</strong> by suit. Fill all four foundations to win!</p>
 
-                <h2 class="modal-heading">🃏 The Piles</h2>
+                <h2 class="modal-heading"><span aria-hidden="true">🃏</span> The Piles</h2>
                 <table class="help-table">
                     <tr><th>Pile</th><th>Description</th></tr>
                     <tr><td><strong>Stock</strong></td><td>Face-down draw pile. Click to draw a card.</td></tr>
@@ -90,7 +90,7 @@
                     <tr><td><strong>Tableau ×7</strong></td><td>Seven columns where most gameplay happens.</td></tr>
                 </table>
 
-                <h2 class="modal-heading">📜 Rules</h2>
+                <h2 class="modal-heading"><span aria-hidden="true">📜</span> Rules</h2>
                 <ol class="help-list">
                     <li><strong>Tableau</strong> columns are built in <em>descending order</em> with <em>alternating colors</em> (e.g. red 6 on black 7).</li>
                     <li><strong>Foundations</strong> are built in <em>ascending order</em> (A, 2 … K) by the <em>same suit</em>.</li>
@@ -99,7 +99,7 @@
                     <li>When the Stock is empty, click it to <strong>recycle</strong> the Waste pile back to the Stock.</li>
                 </ol>
 
-                <h2 class="modal-heading">🏆 Scoring</h2>
+                <h2 class="modal-heading"><span aria-hidden="true">🏆</span> Scoring</h2>
                 <table class="help-table">
                     <tr><th>Action</th><th>Points</th></tr>
                     <tr><td>Move card to Foundation</td><td class="points-pos">+10</td></tr>
