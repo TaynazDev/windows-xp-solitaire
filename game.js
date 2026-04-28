@@ -1,6 +1,6 @@
 /**
  * game.js – Windows XP Solitaire Core Logic
- * Implements: Deck generation, shuffle, and initial game state setup.
+ * Implements: Deck, shuffle, full Klondike rules, click-to-move, touch support.
  */
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -9,23 +9,12 @@ const SUITS = ['♥', '♦', '♣', '♠'];
 const SUIT_NAMES = ['hearts', 'diamonds', 'clubs', 'spades'];
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-// ─── Data Structures ─────────────────────────────────────────────────────────
+// ─── State ───────────────────────────────────────────────────────────────────
 
 /**
- * A single playing card.
  * @typedef {{ suit: string, suitName: string, rank: string, value: number, faceUp: boolean }} Card
  */
 
-/**
- * Game state object.
- * @type {{
- *   deck: Card[],
- *   stock: Card[],
- *   waste: Card[],
- *   foundations: Card[][],
- *   tableau: Card[][]
- * }}
- */
 const gameState = {
     deck: [],
     stock: [],
@@ -38,12 +27,17 @@ let score = 0;
 let timerSeconds = 0;
 let timerInterval = null;
 
+/**
+ * selectedSource tracks which card(s) are currently selected.
+ * null                              – nothing selected
+ * { type: 'waste' }                 – top waste card selected
+ * { type: 'tableau', col, cardIdx } – tableau card at col/cardIdx (+ all below it)
+ * { type: 'foundation', idx }       – top foundation card selected
+ */
+let selectedSource = null;
+
 // ─── Deck Utilities ───────────────────────────────────────────────────────────
 
-/**
- * Generate a standard 52-card deck.
- * @returns {Card[]}
- */
 function createDeck() {
     const deck = [];
     for (let s = 0; s < SUITS.length; s++) {
@@ -52,7 +46,7 @@ function createDeck() {
                 suit: SUITS[s],
                 suitName: SUIT_NAMES[s],
                 rank: RANKS[r],
-                value: r + 1,   // Ace=1, 2=2, … King=13
+                value: r + 1,   // Ace=1 … King=13
                 faceUp: false,
             });
         }
@@ -60,11 +54,7 @@ function createDeck() {
     return deck;
 }
 
-/**
- * Shuffle an array in-place using the Fisher-Yates algorithm.
- * @param {any[]} array
- * @returns {any[]} The same array, shuffled.
- */
+/** Fisher-Yates shuffle in-place. */
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -73,65 +63,274 @@ function shuffle(array) {
     return array;
 }
 
-/**
- * Returns true if a suit is red (Hearts or Diamonds).
- * @param {string} suit
- * @returns {boolean}
- */
 function isRed(suit) {
     return suit === '♥' || suit === '♦';
 }
 
+// ─── Card Dimensions (responsive) ────────────────────────────────────────────
+
+/** Read the current rendered height of the stock pile slot (= card height). */
+function getCardHeight() {
+    const stockEl = document.getElementById('stock-pile');
+    return stockEl ? stockEl.offsetHeight : 100;
+}
+
 // ─── Game Initialization ──────────────────────────────────────────────────────
 
-/**
- * Set up the initial Klondike Solitaire game state:
- *  - Tableau columns 0-6 receive 1-7 cards respectively.
- *    The top card of each column is face-up; the rest are face-down.
- *  - Remaining cards go to the Stock pile (face-down).
- *  - Waste and Foundation piles start empty.
- */
 function initGame() {
-    // Reset state
     gameState.stock = [];
     gameState.waste = [];
     gameState.foundations = [[], [], [], []];
     gameState.tableau = [[], [], [], [], [], [], []];
     score = 0;
     timerSeconds = 0;
+    selectedSource = null;
 
-    // Create and shuffle the deck
+    if (timerInterval) clearInterval(timerInterval);
+
     gameState.deck = shuffle(createDeck());
 
-    // Deal to tableau
+    // Deal to tableau: column i gets i+1 cards; last card face-up
     let cardIndex = 0;
     for (let col = 0; col < 7; col++) {
         for (let row = 0; row <= col; row++) {
             const card = gameState.deck[cardIndex++];
-            card.faceUp = (row === col); // Only the last card in each column is face-up
+            card.faceUp = (row === col);
             gameState.tableau[col].push(card);
         }
     }
 
-    // Remaining cards go to the stock
+    // Remaining cards → stock (face-down)
     for (; cardIndex < gameState.deck.length; cardIndex++) {
         const card = gameState.deck[cardIndex];
         card.faceUp = false;
         gameState.stock.push(card);
     }
 
-    // Render the initial state
     render();
     startTimer();
 }
 
-// ─── Rendering ────────────────────────────────────────────────────────────────
+// ─── Move Validation ─────────────────────────────────────────────────────────
+
+function canPlaceOnTableauColumn(card, targetCol) {
+    const column = gameState.tableau[targetCol];
+    if (column.length === 0) {
+        return card.value === 13; // Only Kings on empty columns
+    }
+    const topCard = column[column.length - 1];
+    if (!topCard.faceUp) return false;
+    return card.value === topCard.value - 1 && isRed(card.suit) !== isRed(topCard.suit);
+}
+
+function canPlaceOnFoundation(card, foundationIdx) {
+    const pile = gameState.foundations[foundationIdx];
+    if (pile.length === 0) {
+        return card.value === 1; // Only Aces start a foundation
+    }
+    const topCard = pile[pile.length - 1];
+    return card.suit === topCard.suit && card.value === topCard.value + 1;
+}
+
+// ─── Move Execution ───────────────────────────────────────────────────────────
 
 /**
- * Build an HTML element for a single card.
- * @param {Card} card
- * @returns {HTMLElement}
+ * Try to execute a move from source to dest.
+ * Returns true if the move succeeded.
  */
+function executeMove(source, dest) {
+    if (dest.type === 'foundation') {
+        let card;
+        if (source.type === 'waste') {
+            card = gameState.waste[gameState.waste.length - 1];
+            if (!card || !canPlaceOnFoundation(card, dest.idx)) return false;
+            gameState.waste.pop();
+            gameState.foundations[dest.idx].push(card);
+            score += 10;
+        } else if (source.type === 'tableau') {
+            const col = gameState.tableau[source.col];
+            if (source.cardIdx !== col.length - 1) return false; // Only the top card
+            card = col[source.cardIdx];
+            if (!card || !canPlaceOnFoundation(card, dest.idx)) return false;
+            col.pop();
+            gameState.foundations[dest.idx].push(card);
+            score += 10;
+            // Flip new top of source column if face-down
+            if (col.length > 0 && !col[col.length - 1].faceUp) {
+                col[col.length - 1].faceUp = true;
+                score += 5;
+            }
+        } else {
+            return false; // Foundation-to-foundation not allowed
+        }
+        score = Math.max(0, score);
+        return true;
+    }
+
+    if (dest.type === 'tableau') {
+        if (source.type === 'waste') {
+            const card = gameState.waste[gameState.waste.length - 1];
+            if (!card || !canPlaceOnTableauColumn(card, dest.col)) return false;
+            gameState.waste.pop();
+            gameState.tableau[dest.col].push(card);
+            score += 5;
+        } else if (source.type === 'tableau') {
+            const srcCol = gameState.tableau[source.col];
+            const cards = srcCol.slice(source.cardIdx);
+            if (cards.length === 0 || !cards[0].faceUp) return false;
+            if (!canPlaceOnTableauColumn(cards[0], dest.col)) return false;
+            srcCol.splice(source.cardIdx);
+            gameState.tableau[dest.col].push(...cards);
+            // Flip new top of source column if face-down
+            if (srcCol.length > 0 && !srcCol[srcCol.length - 1].faceUp) {
+                srcCol[srcCol.length - 1].faceUp = true;
+                score += 5;
+            }
+        } else if (source.type === 'foundation') {
+            const pile = gameState.foundations[source.idx];
+            const card = pile[pile.length - 1];
+            if (!card || !canPlaceOnTableauColumn(card, dest.col)) return false;
+            pile.pop();
+            gameState.tableau[dest.col].push(card);
+            score = Math.max(0, score - 15);
+        }
+        score = Math.max(0, score);
+        return true;
+    }
+
+    return false;
+}
+
+// ─── Selection Helpers ────────────────────────────────────────────────────────
+
+function clearSelection() {
+    selectedSource = null;
+}
+
+// ─── Click / Tap Handlers ─────────────────────────────────────────────────────
+
+function handleStockClick() {
+    clearSelection();
+    if (gameState.stock.length === 0) {
+        // Recycle: flip waste back to stock
+        while (gameState.waste.length > 0) {
+            const card = gameState.waste.pop();
+            card.faceUp = false;
+            gameState.stock.push(card);
+        }
+        score = Math.max(0, score - 100);
+    } else {
+        const card = gameState.stock.pop();
+        card.faceUp = true;
+        gameState.waste.push(card);
+        score = Math.max(0, score - 2);
+    }
+    render();
+}
+
+function handleWasteClick() {
+    if (gameState.waste.length === 0) return;
+    if (selectedSource && selectedSource.type === 'waste') {
+        clearSelection();
+    } else {
+        selectedSource = { type: 'waste' };
+    }
+    render();
+}
+
+function handleFoundationClick(idx) {
+    if (selectedSource) {
+        if (selectedSource.type === 'foundation' && selectedSource.idx === idx) {
+            clearSelection();
+            render();
+            return;
+        }
+        const moved = executeMove(selectedSource, { type: 'foundation', idx });
+        clearSelection();
+        render();
+        if (moved) checkWin();
+    } else {
+        if (gameState.foundations[idx].length > 0) {
+            selectedSource = { type: 'foundation', idx };
+            render();
+        }
+    }
+}
+
+/**
+ * Handle a click/tap on a tableau column.
+ * @param {number} col   - column index (0-6)
+ * @param {number|null} cardIdx - card index within the column, or null for empty column area
+ */
+function handleTableauClick(col, cardIdx) {
+    if (cardIdx === null) {
+        // Clicked on the empty part of a column
+        if (selectedSource) {
+            executeMove(selectedSource, { type: 'tableau', col });
+            clearSelection();
+            render();
+            checkWin();
+        }
+        return;
+    }
+
+    const column = gameState.tableau[col];
+    const card = column[cardIdx];
+    if (!card) return;
+
+    if (!card.faceUp) {
+        // Tap a face-down card: only flip if it's the top card
+        if (cardIdx === column.length - 1) {
+            clearSelection();
+            card.faceUp = true;
+            score += 5;
+            render();
+        }
+        return;
+    }
+
+    if (selectedSource) {
+        if (
+            selectedSource.type === 'tableau' &&
+            selectedSource.col === col &&
+            selectedSource.cardIdx === cardIdx
+        ) {
+            // Tapping the already-selected card deselects it
+            clearSelection();
+            render();
+            return;
+        }
+        // Try to move the selection onto this column
+        const moved = executeMove(selectedSource, { type: 'tableau', col });
+        if (moved) {
+            clearSelection();
+            render();
+            checkWin();
+        } else {
+            // Invalid destination – reselect the tapped card instead
+            clearSelection();
+            selectedSource = { type: 'tableau', col, cardIdx };
+            render();
+        }
+    } else {
+        selectedSource = { type: 'tableau', col, cardIdx };
+        render();
+    }
+}
+
+// ─── Win Detection ────────────────────────────────────────────────────────────
+
+function checkWin() {
+    if (gameState.foundations.every(pile => pile.length === 13)) {
+        if (timerInterval) clearInterval(timerInterval);
+        setTimeout(() => {
+            alert(`You win! 🎉\nScore: ${score}\nTime: ${timerSeconds}s`);
+        }, 200);
+    }
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────────────
+
 function createCardElement(card) {
     const el = document.createElement('div');
     el.classList.add('card');
@@ -162,9 +361,6 @@ function createCardElement(card) {
     return el;
 }
 
-/**
- * Render the entire game state to the DOM.
- */
 function render() {
     renderStock();
     renderWaste();
@@ -184,14 +380,13 @@ function renderStock() {
 
         const countLabel = document.createElement('span');
         countLabel.style.cssText =
-            'position:absolute;bottom:4px;right:6px;color:rgba(255,255,255,0.7);font-size:11px;';
+            'position:absolute;bottom:4px;right:6px;color:rgba(255,255,255,0.7);font-size:11px;pointer-events:none;';
         countLabel.textContent = gameState.stock.length;
         stockEl.appendChild(countLabel);
     } else {
-        // Empty stock – show recycle indicator
         const recycleEl = document.createElement('span');
         recycleEl.textContent = '↺';
-        recycleEl.style.cssText = 'font-size:36px;color:rgba(255,255,255,0.4);';
+        recycleEl.style.cssText = 'font-size:36px;color:rgba(255,255,255,0.4);pointer-events:none;';
         stockEl.appendChild(recycleEl);
     }
 }
@@ -203,6 +398,9 @@ function renderWaste() {
     if (gameState.waste.length > 0) {
         const topCard = gameState.waste[gameState.waste.length - 1];
         const cardEl = createCardElement(topCard);
+        if (selectedSource && selectedSource.type === 'waste') {
+            cardEl.classList.add('selected');
+        }
         wasteEl.appendChild(cardEl);
     } else {
         const label = document.createElement('span');
@@ -221,6 +419,9 @@ function renderFoundations() {
         if (pile.length > 0) {
             const topCard = pile[pile.length - 1];
             const cardEl = createCardElement(topCard);
+            if (selectedSource && selectedSource.type === 'foundation' && selectedSource.idx === i) {
+                cardEl.classList.add('selected');
+            }
             foundationEl.appendChild(cardEl);
         } else {
             const suitEl = document.createElement('span');
@@ -232,6 +433,10 @@ function renderFoundations() {
 }
 
 function renderTableau() {
+    const cardH = getCardHeight();
+    const FACE_DOWN_OFFSET = Math.round(cardH * 0.20);
+    const FACE_UP_OFFSET   = Math.round(cardH * 0.28);
+
     for (let col = 0; col < 7; col++) {
         const colEl = document.getElementById(`tableau-${col}`);
         colEl.innerHTML = '';
@@ -239,22 +444,30 @@ function renderTableau() {
         const cards = gameState.tableau[col];
 
         if (cards.length === 0) {
-            // Keep the empty column placeholder visible
-            colEl.style.minHeight = '100px';
+            colEl.style.minHeight = `${cardH}px`;
+            colEl.style.height = '';
             continue;
         }
 
-        // Dynamically size the column to fit the stacked cards
-        const FACE_DOWN_OFFSET = 20;
-        const FACE_UP_OFFSET = 28;
-
-        let totalHeight = 100; // minimum
         let offset = 0;
 
         cards.forEach((card, index) => {
             const cardEl = createCardElement(card);
             cardEl.classList.add('card-in-tableau');
             cardEl.style.top = `${offset}px`;
+            cardEl.dataset.idx = index;
+
+            // Highlight all selected cards in the sequence
+            if (
+                selectedSource &&
+                selectedSource.type === 'tableau' &&
+                selectedSource.col === col &&
+                index >= selectedSource.cardIdx &&
+                card.faceUp
+            ) {
+                cardEl.classList.add('selected');
+            }
+
             colEl.appendChild(cardEl);
 
             if (index < cards.length - 1) {
@@ -262,7 +475,7 @@ function renderTableau() {
             }
         });
 
-        totalHeight = offset + 100; // last card is full height
+        const totalHeight = offset + cardH;
         colEl.style.minHeight = `${totalHeight}px`;
         colEl.style.height = `${totalHeight}px`;
     }
@@ -284,33 +497,52 @@ function startTimer() {
     }, 1000);
 }
 
-// ─── Event Handlers ───────────────────────────────────────────────────────────
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
 
-/** Draw one card from the stock to the waste pile. */
-function drawFromStock() {
-    if (gameState.stock.length === 0) {
-        // Recycle waste back to stock (face-down, reversed)
-        while (gameState.waste.length > 0) {
-            const card = gameState.waste.pop();
-            card.faceUp = false;
-            gameState.stock.push(card);
-        }
-    } else {
-        const card = gameState.stock.pop();
-        card.faceUp = true;
-        gameState.waste.push(card);
-        score = Math.max(0, score - 2); // XP Solitaire: -2 points per card drawn from stock
-    }
-    render();
-}
-
-// Bind stock click
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('stock-pile').addEventListener('click', drawFromStock);
+    // Stock
+    document.getElementById('stock-pile').addEventListener('click', handleStockClick);
 
-    // Help menu → How to Play modal
+    // Waste
+    document.getElementById('waste-pile').addEventListener('click', handleWasteClick);
+
+    // Foundations – event listeners per pile
+    for (let i = 0; i < 4; i++) {
+        document.getElementById(`foundation-${i}`).addEventListener('click', () => handleFoundationClick(i));
+    }
+
+    // Tableau – event delegation per column
+    for (let col = 0; col < 7; col++) {
+        const colEl = document.getElementById(`tableau-${col}`);
+        colEl.addEventListener('click', (e) => {
+            const cardEl = e.target.closest('.card[data-idx]');
+            if (cardEl) {
+                handleTableauClick(col, parseInt(cardEl.dataset.idx, 10));
+            } else {
+                handleTableauClick(col, null);
+            }
+        });
+    }
+
+    // Game menu dropdown
+    const gameMenuDropdown = document.getElementById('game-menu-dropdown');
+    document.getElementById('menu-game').addEventListener('click', (e) => {
+        e.stopPropagation();
+        gameMenuDropdown.hidden = !gameMenuDropdown.hidden;
+    });
+    document.getElementById('menu-new-game').addEventListener('click', () => {
+        gameMenuDropdown.hidden = true;
+        initGame();
+    });
+    document.addEventListener('click', () => {
+        if (gameMenuDropdown && !gameMenuDropdown.hidden) {
+            gameMenuDropdown.hidden = true;
+        }
+    });
+
+    // Help modal
     const helpOverlay = document.getElementById('help-overlay');
-    const openModal = () => { helpOverlay.hidden = false; };
+    const openModal  = () => { helpOverlay.hidden = false; };
     const closeModal = () => { helpOverlay.hidden = true; };
 
     document.getElementById('menu-help').addEventListener('click', openModal);
@@ -319,6 +551,9 @@ document.addEventListener('DOMContentLoaded', () => {
     helpOverlay.addEventListener('click', (e) => {
         if (e.target === helpOverlay) closeModal();
     });
+
+    // Re-render on viewport resize (recalculates card-height-based offsets)
+    window.addEventListener('resize', render);
 
     initGame();
 });
