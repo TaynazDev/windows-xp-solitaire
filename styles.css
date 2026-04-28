@@ -280,3 +280,156 @@ body {
     color: #444;
     flex-shrink: 0;
 }
+
+/* ---------- Help / How-to-Play Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal-window {
+    width: 480px;
+    max-width: 96vw;
+    max-height: 88vh;
+    border: 2px solid #0a246a;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6), inset 1px 1px 0 #7ba2e0;
+    background-color: #ece9d8;
+    display: flex;
+    flex-direction: column;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.modal-title-bar {
+    background: linear-gradient(to bottom, #0058c8 0%, #3a93f0 40%, #0058c8 100%);
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+.modal-title-text {
+    color: #fff;
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.modal-close-btn {
+    flex-shrink: 0;
+}
+
+.modal-body {
+    padding: 16px 20px 12px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 13px;
+    color: #222;
+    line-height: 1.5;
+}
+
+.modal-heading {
+    font-size: 13px;
+    font-weight: bold;
+    margin: 14px 0 6px;
+    color: #0a246a;
+    border-bottom: 1px solid #c0c0c0;
+    padding-bottom: 3px;
+}
+
+.modal-heading:first-child {
+    margin-top: 0;
+}
+
+.modal-body p {
+    margin-bottom: 6px;
+}
+
+.help-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.help-table th,
+.help-table td {
+    border: 1px solid #c0c0c0;
+    padding: 4px 8px;
+    text-align: left;
+}
+
+.help-table th {
+    background-color: #d4d0c8;
+    font-weight: bold;
+}
+
+.help-table tr:nth-child(even) td {
+    background-color: #f5f4ef;
+}
+
+.points-pos {
+    color: #006600;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.points-neg {
+    color: #cc0000;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.help-list {
+    padding-left: 22px;
+    margin-bottom: 8px;
+}
+
+.help-list li {
+    margin-bottom: 4px;
+}
+
+.modal-note {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.modal-footer {
+    text-align: right;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #c0c0c0;
+}
+
+.modal-ok-btn {
+    padding: 4px 20px;
+    font-size: 13px;
+    background: linear-gradient(to bottom, #f0f0e8, #d4d0c8);
+    border: 1px solid #888;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+.modal-ok-btn:hover {
+    background: linear-gradient(to bottom, #e8e8e0, #c8c4bc);
+}
+
+.modal-ok-btn:active {
+    background: linear-gradient(to bottom, #c8c4bc, #d4d0c8);
+}

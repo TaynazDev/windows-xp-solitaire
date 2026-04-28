@@ -21,8 +21,8 @@
         </div>
 
         <div id="menu-bar">
-            <span class="menu-item">Game</span>
-            <span class="menu-item">Help</span>
+            <span class="menu-item" id="menu-game">Game</span>
+            <span class="menu-item" id="menu-help">Help</span>
         </div>
 
         <div id="game-area">
@@ -64,6 +64,57 @@
         <div id="status-bar">
             <span id="score-label">Score: <span id="score">0</span></span>
             <span id="time-label">Time: <span id="timer">0</span>s</span>
+        </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="help-overlay" class="modal-overlay" hidden>
+        <div id="help-modal" class="modal-window">
+            <div class="modal-title-bar">
+                <div class="modal-title-text">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23000080'/%3E%3Ctext x='2' y='13' font-size='13' fill='red'%3E♠%3C/text%3E%3C/svg%3E" alt="" class="title-icon">
+                    Solitaire Help – How to Play
+                </div>
+                <button class="title-btn modal-close-btn" id="help-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <h2 class="modal-heading"><span aria-hidden="true">🎯</span> Objective</h2>
+                <p>Move all 52 cards to the four <strong>Foundation</strong> piles (♥ ♦ ♣ ♠), built from <strong>Ace up to King</strong> by suit. Fill all four foundations to win!</p>
+
+                <h2 class="modal-heading"><span aria-hidden="true">🃏</span> The Piles</h2>
+                <table class="help-table">
+                    <tr><th>Pile</th><th>Description</th></tr>
+                    <tr><td><strong>Stock</strong></td><td>Face-down draw pile. Click to draw a card.</td></tr>
+                    <tr><td><strong>Waste</strong></td><td>Shows the last card drawn. Can be played onto tableau or foundations.</td></tr>
+                    <tr><td><strong>Foundations ×4</strong></td><td>Build A → K by suit. Win when all four are complete.</td></tr>
+                    <tr><td><strong>Tableau ×7</strong></td><td>Seven columns where most gameplay happens.</td></tr>
+                </table>
+
+                <h2 class="modal-heading"><span aria-hidden="true">📜</span> Rules</h2>
+                <ol class="help-list">
+                    <li><strong>Tableau</strong> columns are built in <em>descending order</em> with <em>alternating colors</em> (e.g. red 6 on black 7).</li>
+                    <li><strong>Foundations</strong> are built in <em>ascending order</em> (A, 2 … K) by the <em>same suit</em>.</li>
+                    <li>Only a <strong>King</strong> (or a sequence starting with a King) may be placed on an empty tableau column.</li>
+                    <li>Click the <strong>Stock</strong> to draw one card to the Waste pile.</li>
+                    <li>When the Stock is empty, click it to <strong>recycle</strong> the Waste pile back to the Stock.</li>
+                </ol>
+
+                <h2 class="modal-heading"><span aria-hidden="true">🏆</span> Scoring</h2>
+                <table class="help-table">
+                    <tr><th>Action</th><th>Points</th></tr>
+                    <tr><td>Move card to Foundation</td><td class="points-pos">+10</td></tr>
+                    <tr><td>Move card from Waste to Tableau</td><td class="points-pos">+5</td></tr>
+                    <tr><td>Turn over a Tableau card</td><td class="points-pos">+5</td></tr>
+                    <tr><td>Move card from Foundation to Tableau</td><td class="points-neg">−15</td></tr>
+                    <tr><td>Draw card from Stock</td><td class="points-neg">−2</td></tr>
+                    <tr><td>Recycle Stock</td><td class="points-neg">−100</td></tr>
+                </table>
+                <p class="modal-note">Score never drops below 0.</p>
+
+                <div class="modal-footer">
+                    <button class="modal-ok-btn" id="help-ok-btn">OK</button>
+                </div>
+            </div>
         </div>
     </div>
 

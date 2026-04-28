@@ -307,5 +307,18 @@ function drawFromStock() {
 // Bind stock click
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('stock-pile').addEventListener('click', drawFromStock);
+
+    // Help menu → How to Play modal
+    const helpOverlay = document.getElementById('help-overlay');
+    const openModal = () => { helpOverlay.hidden = false; };
+    const closeModal = () => { helpOverlay.hidden = true; };
+
+    document.getElementById('menu-help').addEventListener('click', openModal);
+    document.getElementById('help-close-btn').addEventListener('click', closeModal);
+    document.getElementById('help-ok-btn').addEventListener('click', closeModal);
+    helpOverlay.addEventListener('click', (e) => {
+        if (e.target === helpOverlay) closeModal();
+    });
+
     initGame();
 });
