@@ -7,24 +7,66 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="game">
-        <h1>Solitaire</h1>
-        <div id="deck">
-            <div class="card">A♠</div>
-            <div class="card">2♠</div>
-            <div class="card">3♠</div>
-            <div class="card">4♠</div>
-            <div class="card">5♠</div>
-            <div class="card">6♠</div>
-            <div class="card">7♠</div>
-            <div class="card">8♠</div>
-            <div class="card">9♠</div>
-            <div class="card">10♠</div>
-            <div class="card">J♠</div>
-            <div class="card">Q♠</div>
-            <div class="card">K♠</div>
+    <div id="window-frame">
+        <div id="title-bar">
+            <div id="title-bar-text">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23000080'/%3E%3Ctext x='2' y='13' font-size='13' fill='red'%3E♠%3C/text%3E%3C/svg%3E" alt="" class="title-icon">
+                Solitaire
+            </div>
+            <div id="title-bar-controls">
+                <button class="title-btn" id="btn-minimize">_</button>
+                <button class="title-btn" id="btn-maximize">□</button>
+                <button class="title-btn" id="btn-close">✕</button>
+            </div>
+        </div>
+
+        <div id="menu-bar">
+            <span class="menu-item">Game</span>
+            <span class="menu-item">Help</span>
+        </div>
+
+        <div id="game-area">
+            <!-- Top row: Stock, Waste, spacer, then 4 Foundations -->
+            <div id="top-row">
+                <div id="stock-pile" class="pile-slot" title="Stock">
+                    <span class="pile-label">Stock</span>
+                </div>
+                <div id="waste-pile" class="pile-slot" title="Waste">
+                    <span class="pile-label">Waste</span>
+                </div>
+                <div class="spacer"></div>
+                <div id="foundation-0" class="pile-slot foundation" data-index="0" title="Foundation 1">
+                    <span class="pile-suit">♥</span>
+                </div>
+                <div id="foundation-1" class="pile-slot foundation" data-index="1" title="Foundation 2">
+                    <span class="pile-suit">♦</span>
+                </div>
+                <div id="foundation-2" class="pile-slot foundation" data-index="2" title="Foundation 3">
+                    <span class="pile-suit">♣</span>
+                </div>
+                <div id="foundation-3" class="pile-slot foundation" data-index="3" title="Foundation 4">
+                    <span class="pile-suit">♠</span>
+                </div>
+            </div>
+
+            <!-- Bottom row: 7 Tableau columns -->
+            <div id="tableau">
+                <div id="tableau-0" class="tableau-column" data-index="0"></div>
+                <div id="tableau-1" class="tableau-column" data-index="1"></div>
+                <div id="tableau-2" class="tableau-column" data-index="2"></div>
+                <div id="tableau-3" class="tableau-column" data-index="3"></div>
+                <div id="tableau-4" class="tableau-column" data-index="4"></div>
+                <div id="tableau-5" class="tableau-column" data-index="5"></div>
+                <div id="tableau-6" class="tableau-column" data-index="6"></div>
+            </div>
+        </div>
+
+        <div id="status-bar">
+            <span id="score-label">Score: <span id="score">0</span></span>
+            <span id="time-label">Time: <span id="timer">0</span>s</span>
         </div>
     </div>
+
     <script src="game.js"></script>
 </body>
 </html>
