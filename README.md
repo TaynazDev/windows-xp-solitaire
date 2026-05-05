@@ -4,6 +4,10 @@ A faithful browser recreation of the classic **Windows XP Solitaire** (Klondike)
 
 ---
 
+Play Now With This Link!
+
+taynazdev.github.io/windows-xp-solitaire/
+
 ## ✨ Features
 
 - Classic Klondike Solitaire gameplay
